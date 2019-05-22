@@ -118,6 +118,7 @@ class Node extends React.Component<INodeProps, INodeState> {
     d3
       .select(this.nodeRef.current)
       .on('mouseout', this.handleMouseOut)
+      .on('click', this.handleClick)
       .call(dragFunction);
   }
 
@@ -154,14 +155,10 @@ class Node extends React.Component<INodeProps, INodeState> {
   }
 
   handleDragStart = () => {
+    d3.event.sourceEvent.stopPropagation();
     if (!this.nodeRef.current) {
       return;
     }
-    if (!this.oldSibling) {
-      this.oldSibling = this.nodeRef.current.parentElement.nextSibling;
-    }
-    // Moves child to the end of the element stack to re-arrange the z-index
-    this.nodeRef.current.parentElement.parentElement.appendChild(this.nodeRef.current.parentElement);
   }
 
   handleDragEnd = () => {
@@ -172,18 +169,18 @@ class Node extends React.Component<INodeProps, INodeState> {
     const { data, index, nodeKey } = this.props;
     this.setState({ mouseDown: false, drawingEdge: false });
 
-    if (this.oldSibling && this.oldSibling.parentElement) {
-      this.oldSibling.parentElement.insertBefore(this.nodeRef.current.parentElement, this.oldSibling);
-    }
-
     const shiftKey = d3.event.sourceEvent.shiftKey;
     this.props.onNodeUpdate(
       { x, y },
       data[nodeKey],
       shiftKey || drawingEdge
     );
+  }
 
-    this.props.onNodeSelected(data, data[nodeKey], shiftKey || drawingEdge);
+  handleClick = () => {
+    const { drawingEdge } = this.state;
+    const { data, index, nodeKey } = this.props; 
+    this.props.onNodeSelected(data, data[nodeKey], drawingEdge);
   }
 
   handleMouseOver = (event: any) => {
